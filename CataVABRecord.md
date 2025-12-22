@@ -129,3 +129,57 @@ Private Function CollectionToArray(ByVal col As Collection) As String()
     CollectionToArray = arr
 End Function
 
+## 获取Part
+    Sub GetCatiaChild()
+    
+    
+    Dim oproductDoc As Document
+    Set oproductDoc = CATIA.ActiveDocument ' returns a Document
+    
+    Set oProduct = oproductDoc.Product
+    
+    Dim TopProductName As String
+    TopProductPN = oProduct.PartNumber
+    
+    
+ 
+    
+    If oProduct.Products.Count >= 1 Then
+        Set oSubProduct = oProduct.Products.Item(1)
+        
+        
+        Set leafProd = oSubProduct.Products.Item(1) ' 这是你遍历到的叶子 Product ,到一个没有子项的 Product（通常是零件）
+        
+        
+       ' Dim leafProd As Product        ' 这是你遍历到的叶子 Product
+
+        If leafProd.Products.Count = 0 Then
+            Dim refProd As Product
+            Set refProd = leafProd.ReferenceProduct
+    
+            If Not refProd Is Nothing Then
+                If TypeName(refProd.Parent) = "PartDocument" Then
+                    Dim partDoc As PartDocument
+                    Set partDoc = refProd.Parent    'Product 的父链拿到它所属的文档对象 零件文档 —— PartDocument,装配文档 —— ProductDocument
+            
+                    ' 现在可以拿 Part / Bodies 等
+                    Dim partObj As Part
+                    Set partObj = partDoc.Part
+            
+                    Dim bodies As bodies
+                    Set bodies = partObj.bodies
+                
+                End If
+             End If
+        End If
+    End If
+    
+    End Sub
+
+
+
+    ' If TypeName(CATIA.ActiveDocument) = "PartDocument" Then
+    ' Dim partDoc As PartDocument
+    ' Set partDoc = CATIA.ActiveDocument        ' ← 已经有实例
+    ' ' 此时就不需要 Set partDoc = refProd.Parent 了
+    ' End If
