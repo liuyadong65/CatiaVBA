@@ -28,3 +28,104 @@ C:\Users\YLIU119\OneDrive - azureford\desktop\Catia tool\online
     End If
     
     End Sub
+
+
+### 递归遍历 所有文件名
+    
+Option Explicit
+
+' === 入口过程：直接运行它 ===
+Sub ExportProductTreeToText()
+
+    ' 确保当前是装配文档（CATProduct）
+    If CATIA Is Nothing Then
+        MsgBox "未检测到 CATIA 应用。", vbExclamation
+        Exit Sub
+    End If
+    
+    If TypeName(CATIA.ActiveDocument) <> "ProductDocument" Then
+        MsgBox "请先打开一个装配文档（.CATProduct）。当前文档类型：" & TypeName(CATIA.ActiveDocument), vbExclamation
+        Exit Sub
+    End If
+
+    Dim prodDoc As ProductDocument
+    Set prodDoc = CATIA.ActiveDocument
+    
+    Dim rootProd As Product
+    Set rootProd = prodDoc.Product
+    
+    ' 收集每一行文本
+    Dim lines As Collection
+    Set lines = New Collection
+    
+    ' 递归遍历
+    WalkProductTree rootProd, 0, lines
+    
+    ' 合并为文本
+    Dim outText As String
+    outText = Join(CollectionToArray(lines), vbCrLf)
+    
+    ' 保存到桌面
+    Dim outPath As String
+    outPath = "C:\Users\YLIU119\OneDrive - azureford\vscode\catiaVBA\ProductTree.txt"
+    
+    Dim f As Integer
+    f = FreeFile
+    Open outPath For Output As #f
+    Print #f, outText
+    Close #f
+    
+    MsgBox "已导出父子结构到：" & outPath, vbInformation
+
+End Sub
+
+' === 递归遍历 ===
+' prod  : 当前产品节点
+' level : 层级深度（用于缩进）
+' lines : 收集输出行
+Private Sub WalkProductTree(ByVal prod As Product, ByVal level As Long, ByRef lines As Collection)
+    Dim indent As String
+    indent = String$(level * 2, " ")    ' 每层两个空格缩进（可调）
+    
+    Dim hasChildren As Boolean
+    hasChildren = (prod.Products.Count > 0)
+    
+    ' 取显示名：优先 PartNumber，若为空则用 Name
+    Dim displayName As String
+    displayName = SafePartNumber(prod)
+    If Len(Trim$(displayName)) = 0 Then displayName = prod.Name
+    
+    ' 有子零件前加 "+ "
+    Dim line As String
+    line = indent & IIf(hasChildren, "+ ", "  ") & displayName
+    lines.Add line
+    
+    ' 如果有子零件，继续递归
+    If hasChildren Then
+        Dim i As Long
+        Dim child As Product
+        For i = 1 To prod.Products.Count          ' 注意：CATIA 集合是 1 基
+            Set child = prod.Products.Item(i)
+            WalkProductTree child, level + 1, lines
+        Next i
+    End If
+End Sub
+
+' === 安全获取 PartNumber（避免异常） ===
+Private Function SafePartNumber(ByVal prod As Product) As String
+    On Error Resume Next
+    SafePartNumber = prod.PartNumber
+    On Error GoTo 0
+End Function
+
+' === 将 Collection 转为字符串数组，便于 Join ===
+Private Function CollectionToArray(ByVal col As Collection) As String()
+    Dim arr() As String
+    Dim i As Long
+    ReDim arr(1 To col.Count)
+    For i = 1 To col.Count
+        arr(i) = col.Item(i)
+    Next i
+    CollectionToArray = arr
+End Function
+
