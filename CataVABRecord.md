@@ -183,3 +183,8 @@ End Function
     ' Set partDoc = CATIA.ActiveDocument        ' ← 已经有实例
     ' ' 此时就不需要 Set partDoc = refProd.Parent 了
     ' End If
+
+
+## 提取body的面
+现在的做法是对每个 Body 先把所有 Face 搜出来，再逐个建 Extract，这在几何复杂/面数多的时候会非常慢。
+其实你要的“从第一选中的面开始，按点联系（Point Continuity）把整片面一并提取”可以直接用 HybridShapeExtract 的**传播（Propagation）**功能一次完成，不必循环每个面。
