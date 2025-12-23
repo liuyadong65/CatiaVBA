@@ -188,3 +188,28 @@ End Function
 ## 提取body的面
 现在的做法是对每个 Body 先把所有 Face 搜出来，再逐个建 Extract，这在几何复杂/面数多的时候会非常慢。
 其实你要的“从第一选中的面开始，按点联系（Point Continuity）把整片面一并提取”可以直接用 HybridShapeExtract 的**传播（Propagation）**功能一次完成，不必循环每个面。
+
+
+## 无参化数据：
+在 CATIA V5 里，把由 HybridShapeExtract 得到的曲面无参化，常用两种做法：
+
+创建 Datum（显式曲面）：用 HybridShapeFactory.AddNewSurfaceDatum 把 Extract 结果转换为显式（Explicit）曲面，从而断开与原几何的设计规格关联；该显式对象的类型是 HybridShapeSurfaceExplicit（文档明确指出它由 AddNewSurfaceDatum 创建）。 [catiadesign.org], [r1 HybridS...ct) - Free]
+Paste Special - As Result：把几何复制后以“结果（无链接）”方式粘贴，得到独立的几何实体（宏里可用 CATPrtResultWithOutLink 标识）。这同样能无参化，但更适合跨 Part／跨容器复制的场景
+
+
+## 平面的坑
+你观察到 TypeName(sel.Item2(t).Value) 有时是 PlanarFace，而且这个“面”其实来自坐标系的基准平面（XY/YZ/ZX）而不是实体/曲面上的真实拓扑面——这是一个常见坑。
+为什么会这样？
+
+Topology.Face/Topology.PlanarFace 是拓扑层面的“面单元”概念，既可能来自实体/曲面（真·BRep 面），也可能来自显式的基准平面/辅助几何（比如坐标系里的平面），在某些数据结构或搜索范围的组合下，搜索确实会返回“PlanarFace”对象。
+仅用 TypeName = "PlanarFace" 并不能保证它就是“可用于 HybridShapeExtract 的真实面”（你已经遇到了：继续执行到 Update 时才失败）。
+
+
+解决思路：在“取种子面”那一步就剔除基准平面，保留真实 BRep 面
+可以在尝试 AddNewExtract 之前，对候选对象做两层校验：
+
+父对象校验：该面必须属于当前 body（或者属于一个 Shape/Surface），不能来自 AxisSystem、HybridShapePlaneExplicit 这类基准平面。
+可测量性校验：对该 Reference 做一次轻量测量（面积），真实的 BRep 面通常可以正常返回面积；若抛错或面积为 0，则认为不是可用面。
+
+
+注：这两步在宏层面非常轻量，不会像到 part.Update 才报错那样浪费时间。
