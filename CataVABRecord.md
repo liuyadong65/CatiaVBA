@@ -242,3 +242,31 @@ Topology.Face/Topology.PlanarFace 是拓扑层面的“面单元”概念，既�
 
 
 注：这两步在宏层面非常轻量，不会像到 part.Update 才报错那样浪费时间。
+
+
+## 如果要操作 Part 本身（比如画草图 / 建特征），怎么办？
+' 1. 装配层级：用Product接收新创建的Part组件（必须）
+Dim product2 As Product
+Set product2 = products1.AddNewComponent("Part", "")
+
+' 2. 从Product对象中提取关联的Part对象（零件层级操作）
+Dim part2 As Part
+' Product.ReferenceProduct：拿到组件关联的“基准产品”
+' Product.ReferenceProduct.Parent：基准产品关联的PartDocument
+' PartDocument.Part：最终拿到Part对象
+Set part2 = product2.ReferenceProduct.Parent.Part
+
+' 3. 现在可以用part2操作零件几何（比如画草图）
+Dim sketch1 As Sketch
+Set sketch1 = part2.Bodies.Item("Body").Sketches.Add(part2.OriginElements.PlaneXY)
+
+通俗类比（帮你理解）
+可以把 CATIA 装配想象成 “书架”：
+书架（顶级 Product）上的每一层格子（Products 集合）；
+格子里放的书：可以是 “子书架”（子 Product）、“单行本”（Part）；
+不管书的类型是什么，“格子的标签” 就是Product对象（你操作标签就能移动 / 改名 / 删除书）；
+而书的内容（Part 的几何），需要先通过 “标签”（Product）找到书本身（Part）。
+ 
+必须用 Product 接收：AddNewComponent是装配层级的方法，返回值固定为Product，和你创建的是 Part/Product 无关；
+Product 是装配的 “入口”：要操作 Part 的几何，需从Product对象中转拿到Part对象；
+不要混淆层级：Product属于装配层级，Part属于零件层级，PartDocument属于文档层级，三者不能直接赋值，需通过 CATIA 的对象关联关系转换。
