@@ -8,6 +8,35 @@ C:\Users\YLIU119\OneDrive - azureford\desktop\Catia tool\online
 <img width="640" height="300" alt="image" src="https://github.com/user-attachments/assets/241d6c86-b256-40ad-9c1b-a0b2dffaf52d" />
 
 
+### 选路径打开文档：
+    Sub CATMain()
+    
+    Dim documents1 As Documents
+    Set documents1 = CATIA.Documents
+    
+    Dim productDocument1 As ProductDocument
+    Set productDocument1 = documents1.Open("C:\Users\YLIU119\OneDrive - azureford\desktop\SeatCAD\R2TB-R61178-A.CATProduct")
+    
+    Dim product1 As Product
+    Set product1 = productDocument1.Product
+    
+    product1.ApplyWorkMode DESIGN_MODE
+    
+    Dim specsAndGeomWindow1 As SpecsAndGeomWindow
+    Set specsAndGeomWindow1 = CATIA.ActiveWindow
+    
+    Dim viewer3D1 As Viewer3D
+    Set viewer3D1 = specsAndGeomWindow1.ActiveViewer
+    
+    viewer3D1.Reframe
+    
+    Dim viewpoint3D1 As Viewpoint3D
+    Set viewpoint3D1 = viewer3D1.Viewpoint3D
+    
+    End Sub
+
+
+
 ### 第一个测试文件，获取文件名：
 
     Sub GetCatiaChild()
