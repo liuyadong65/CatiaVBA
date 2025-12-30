@@ -391,7 +391,7 @@ Private Sub ExtractAllCAD_Click()
 
  
 
-'    ' 2. 获取顶级产品的子组件集合并导入外部CATProduct文件
+' 2. 获取顶级产品的子组件集合并导入外部CATProduct文件
     
     Set products1 = product1.products
   
@@ -698,6 +698,7 @@ Private Sub CopySurfaceToTarget(srcSurf As HybridShapeSurfaceExplicit, srcPart A
 End Sub
 
 ' ========== 辅助函数（保留原逻辑） ==========
+
 Private Function IsMeasurableFace(ByVal partDoc As PartDocument, ByVal ref As Reference) As Boolean
     Dim meas As Measurable
     Set meas = partDoc.GetWorkbench("SPAWorkbench").GetMeasurable(ref)
